@@ -1,22 +1,31 @@
-﻿using Embedings.Models;
+﻿using Embedings.Interfaces;
+using Embedings.Models;
 using Embedings.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Embedings.Controllers;
-
-[Route("api/[controller]")]
-[ApiController]
-public class GPTController : ControllerBase
+namespace Embedings.Controllers
 {
-    [HttpPost("TestGPT")]
-    public async Task<IActionResult> TestGPT([FromBody] GPTRequest request)
+    [Route("api/[controller]")]
+    [ApiController]
+    public class GPTController : ControllerBase
     {
-        if (request == null || string.IsNullOrWhiteSpace(request.Inputs))
+        private readonly IGPTService _gptService;
+
+        public GPTController(IGPTService gptService)
         {
-            return BadRequest("Invalid request.");
+            _gptService = gptService;
         }
 
-        var result = await GPTService.GetResponseAsync(request.Inputs);
-        return Ok(result);
+        [HttpPost("TestGPT")]
+        public async Task<IActionResult> TestGPT([FromBody] GPTRequest request)
+        {
+            if (request == null || string.IsNullOrWhiteSpace(request.Inputs))
+            {
+                return BadRequest("Invalid request.");
+            }
+
+            var result = await _gptService.GetResponseAsync(request.Inputs);
+            return Ok(result);
+        }
     }
 }
