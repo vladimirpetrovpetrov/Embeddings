@@ -1,6 +1,5 @@
 ﻿using Embedings.Interfaces;
 using Embedings.Models;
-using Embedings.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Embedings.Controllers
