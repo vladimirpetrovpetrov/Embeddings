@@ -1,39 +1,30 @@
 ﻿using Embedings.Interfaces;
 using Embedings.Models;
-using Embedings.Services;
 using Microsoft.AspNetCore.Mvc;
-using MSSqlServerDB;
 
-namespace Embedings.Controllers;
-
-[Route("api/[controller]")]
-[ApiController]
-public class ChatBotController : ControllerBase
+namespace Embedings.Controllers
 {
-    private readonly EmbedingsDbContext _context;
-    private readonly IEmbeddingService _embeddingService;
-    private readonly IPineconeService _pineconeService;
-
-    public ChatBotController(EmbedingsDbContext context,IEmbeddingService embeddingService,IPineconeService pineconeService)
+    [Route("api/[controller]")]
+    [ApiController]
+    public class ChatBotController : ControllerBase
     {
-        _context = context;
-        _embeddingService = embeddingService;
-        _pineconeService = pineconeService;
+        private readonly IChatBotService _chatBotService;
 
-    }
-
-    [HttpPost("SaveChunk")]
-    public async Task<IActionResult> SaveChunk([FromBody] UpsertVectorRequest request)
-    {
-        var embedding = await _embeddingService.GetEmbeddingAsync(request.Input);
-        var metadata = new Pinecone.Metadata();
-        foreach (var kvp in request.Metadata)
+        public ChatBotController(IChatBotService chatBotService)
         {
-            metadata[kvp.Key] = kvp.Value;
+            _chatBotService = chatBotService;
         }
-        var result = await _pineconeService.UpsertVectorAsync(embedding, metadata);
-        return Ok(result);
+
+        [HttpPost("ProcessText")]
+        public async Task<IActionResult> ProcessText([FromBody] ProcessTextRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.Input))
+            {
+                return BadRequest("Input text cannot be empty.");
+            }
+
+            var result = await _chatBotService.ProcessTextAsync(request.Input, request.Metadata);
+            return Ok(result);
+        }
     }
-
-
 }

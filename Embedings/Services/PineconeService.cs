@@ -17,7 +17,7 @@ namespace Embedings.Services
             _host = configuration["PineconeService:Host"];
         }
 
-        public async Task<string> UpsertVectorAsync(float[] embedding, Metadata metadata)
+        public async Task<string> UpsertVectorAsync(float[] embedding, Metadata metadata, string? vectorId = null)
         {
             var indexClient = await GetIndexClientAsync();
 
@@ -25,7 +25,7 @@ namespace Embedings.Services
             {
                 new Pinecone.Vector
                 {
-                    Id = Guid.NewGuid().ToString(),
+                    Id = vectorId ?? Guid.NewGuid().ToString(),
                     Values = new ReadOnlyMemory<float>(embedding),
                     Metadata = metadata
                 }
