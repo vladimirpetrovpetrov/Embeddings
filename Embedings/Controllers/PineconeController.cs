@@ -67,7 +67,7 @@ namespace Embedings.Controllers
                 MetaDataInfo = matches.Metadata.FirstOrDefault()
             };
 
-            return Ok(result.MetaDataInfo.Value.Value);
+            return Ok(result.MetaDataInfo.Value.Value); // Return something else 
         }
 
         [HttpPost("update")]

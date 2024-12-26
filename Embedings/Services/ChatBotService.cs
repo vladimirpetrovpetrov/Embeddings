@@ -1,4 +1,6 @@
 ﻿using Embedings.Interfaces;
+using Embedings.Models;
+using Microsoft.EntityFrameworkCore;
 using MSSqlServerDB;
 using Pinecone;
 
@@ -50,6 +52,47 @@ namespace Embedings.Services
             await _dbContext.SaveChangesAsync();
 
             return $"Text processed and saved successfully. Pinecone ID: {guid}";
+        }
+
+        public async Task<List<NearestTextDto>> GetNearestTextsAsync(string input, uint topK = 3)
+        {
+            var embedding = await _embeddingService.GetEmbeddingAsync(input);
+
+            var queryRequestData = new QueryRequestData
+            {
+                SearchInput = input,
+                TopK = topK,
+                IncludeValues = false,
+                IncludeMetadata = false
+            };
+
+            var pineconeResponse = await _pineconeService.QueryVectors(queryRequestData, embedding);
+
+            var guids = pineconeResponse.Matches
+                .Select(m => m.Id)
+                .Select(strId => Guid.Parse(strId))
+                .ToList();
+
+            var matchedEmbeddings = await _dbContext.Embeddings
+                .Where(e => guids.Contains(e.Id))
+                .ToListAsync();
+
+            var resultList = new List<NearestTextDto>();
+            foreach (var match in pineconeResponse.Matches)
+            {
+                var textEntity = matchedEmbeddings.FirstOrDefault(e => e.Id == Guid.Parse(match.Id));
+
+                var scoreValue = match.Score ?? 0.0f;
+
+                resultList.Add(new NearestTextDto
+                {
+                    Id = match.Id,
+                    Score = scoreValue,
+                    Text = textEntity.EmbeddingText
+                });
+            }
+
+            return resultList;
         }
 
     }
